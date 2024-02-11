@@ -1,8 +1,8 @@
 import os
 import numpy as np
+from PySide6.QtCore import QSettings
 from PySide6.QtWidgets import (QApplication,
                                QMainWindow,
-                               QDialogButtonBox,
                                QWidget,
                                QVBoxLayout,
                                QSpinBox)
@@ -60,11 +60,9 @@ class MainWin(QMainWindow):
         layout = QVBoxLayout(central_widget)
         self.canvas = PlotCanvas(self)
         layout.addWidget(self.canvas)
-        button_box = QDialogButtonBox()
-        button_box.setStandardButtons(QDialogButtonBox.Ok | QDialogButtonBox.Cancel | QDialogButtonBox.Apply)
-        app_btn = button_box.button(QDialogButtonBox.Apply)
-        app_btn.clicked.connect(self.canvas.update)
+
         spl_pts_spin = QSpinBox()
+        spl_pts_spin.setFixedWidth(100)
         spl_pts_spin.setRange(1, 1000)
         spl_pts_spin.setSingleStep(10)
         spl_pts_spin.setValue(500)
@@ -72,18 +70,28 @@ class MainWin(QMainWindow):
         layout.addWidget(spl_pts_spin)
 
         res_spin = QSpinBox()
+        res_spin.setFixedWidth(100)
         res_spin.setRange(4, 100)
         res_spin.setValue(20)
         res_spin.valueChanged.connect(self.canvas.set_resolution)
         layout.addWidget(res_spin)
 
-        layout.addWidget(button_box)
-
         central_widget.setLayout(layout)
         self.setCentralWidget(central_widget)
+        settings = QSettings("StephanW", "CurveFitting")
+        settings.beginGroup("MainWindow")
+        self.resize(settings.value("size", self.size()))
+        settings.endGroup()
 
     def paintEvent(self, event):
         super().paintEvent(event)
+
+    def closeEvent(self, event):
+        settings = QSettings("StephanW", "CurveFitting")
+        settings.beginGroup("MainWindow")
+        settings.setValue("size", self.size())
+        settings.endGroup()
+        super().closeEvent(event)
 
 
 if __name__ == "__main__":
