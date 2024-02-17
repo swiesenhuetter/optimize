@@ -39,3 +39,19 @@ class Resizer(Enum):
         if position == Resizer.handleSE:
             return Qt.SizeFDiagCursor
         return None
+
+    @staticmethod
+    def regions(bounds: QRectF):
+        sz = Resizer.size()
+
+        resizer_regions = {
+            Resizer.handleNW: QRectF(bounds.left(), bounds.top(), sz, sz),
+            Resizer.handleN: QRectF(bounds.center().x() - sz / 2.0, bounds.top(), sz, sz),
+            Resizer.handleNE: QRectF(bounds.right() - sz, bounds.top(), sz, sz),
+            Resizer.handleW: QRectF(bounds.left(), bounds.center().y() - sz / 2.0, sz, sz),
+            Resizer.handleE: QRectF(bounds.right() - sz, bounds.center().y() - sz / 2.0, sz, sz),
+            Resizer.handleSW: QRectF(bounds.left(), bounds.bottom() - sz, sz, sz),
+            Resizer.handleS: QRectF(bounds.center().x() - sz / 2.0, bounds.bottom() - sz, sz, sz),
+            Resizer.handleSE: QRectF(bounds.right() - sz, bounds.bottom() - sz, sz, sz)
+        }
+        return resizer_regions

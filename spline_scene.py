@@ -30,22 +30,7 @@ class DraggableDot(QGraphicsEllipseItem):
         self.setFlag(QGraphicsEllipseItem.ItemSendsGeometryChanges, True)
         self.setBrush(QColor(0, 0, 255, 255))
         self.resizer_regions = {}
-        self.set_resizer_regions()
-
-    def set_resizer_regions(self):
-        bounds = self.boundingRect()
-        sz = Resizer.size()
-
-        self.resizer_regions = {
-            Resizer.handleNW: QRectF(bounds.left(), bounds.top(), sz, sz),
-            Resizer.handleN: QRectF(bounds.center().x() - sz / 2.0, bounds.top(), sz, sz),
-            Resizer.handleNE: QRectF(bounds.right() - sz, bounds.top(), sz, sz),
-            Resizer.handleW: QRectF(bounds.left(), bounds.center().y() - sz / 2.0, sz, sz),
-            Resizer.handleE: QRectF(bounds.right() - sz, bounds.center().y() - sz / 2.0, sz, sz),
-            Resizer.handleSW: QRectF(bounds.left(), bounds.bottom() - sz, sz, sz),
-            Resizer.handleS: QRectF(bounds.center().x() - sz / 2.0, bounds.bottom() - sz, sz, sz),
-            Resizer.handleSE: QRectF(bounds.right() - sz, bounds.bottom() - sz, sz, sz)
-        }
+        self.resizer_regions = Resizer.regions(self.boundingRect())
 
     def paint(self, painter, option, widget):
         text = str(self.num)
