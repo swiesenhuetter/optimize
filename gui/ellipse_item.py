@@ -8,7 +8,7 @@ from PySide6.QtCore import Qt, QPoint, QPointF
 from gui.resize import Resizer
 
 
-class DraggableDot(QGraphicsEllipseItem):
+class EllipseItem(QGraphicsEllipseItem):
     resizer = Resizer
 
     def __init__(self, x, y, w, h, num, parent=None):

@@ -5,7 +5,7 @@ from PySide6.QtWidgets import (QFileDialog,
 from PySide6.QtGui import (QPixmap)
 from PySide6.QtCore import QSettings, Qt
 from gui.scene import Scene
-from gui.draggable_dot import DraggableDot
+from gui.ellipse_item import EllipseItem
 
 org = "StephanW"
 prog = "QGraphicsTest"
@@ -30,9 +30,11 @@ class ImageViewer(QGraphicsView):
             settings.setArrayIndex(i)
             x = settings.value("dot_x")
             y = settings.value("dot_y")
+            w = settings.value("width")
+            h = settings.value("height")
             num = settings.value("num")
             if None not in (x, y, num):
-                movable_dot = DraggableDot(float(x), float(y), 20, 20, num)
+                movable_dot = EllipseItem(float(x), float(y), float(w), float(h), num)
                 self.dots.append(movable_dot)
                 self.scene().addItem(movable_dot)
 
@@ -70,7 +72,7 @@ class ImageViewer(QGraphicsView):
         # right click to add a dot
         if event.button() == Qt.RightButton:
             pos = event.position()
-            dot = DraggableDot(pos.x() - 10, pos.y() - 10, 40, 40, len(self.dots) + 1)
+            dot = EllipseItem(pos.x() - 10, pos.y() - 10, 40, 40, len(self.dots) + 1)
             self.dots.append(dot)
             self.scene().addItem(dot)
         else:
@@ -95,6 +97,8 @@ class ImageViewer(QGraphicsView):
             rect = dot.rect()
             settings.setValue("dot_x", rect.x() + pos.x())
             settings.setValue("dot_y", rect.y() + pos.y())
+            settings.setValue("width", rect.width())
+            settings.setValue("height", rect.height())
             settings.setValue("num", dot.num)
         settings.endArray()
         settings.endGroup()
