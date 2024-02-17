@@ -4,8 +4,12 @@ from PySide6.QtWidgets import (QApplication,
                                QGraphicsPixmapItem,
                                QGraphicsEllipseItem)
 
-from PySide6.QtGui import QPixmap, QColor, QPainterPath
-from PySide6.QtCore import QSettings, Qt, QRectF
+from PySide6.QtGui import (QPixmap,
+                           QColor,
+                           QPainterPath,
+                           QFont)
+
+from PySide6.QtCore import QSettings, Qt, QRectF, QPoint
 from gui.scene import Scene
 from gui.resize import Resizer
 
@@ -44,10 +48,18 @@ class DraggableDot(QGraphicsEllipseItem):
         }
 
     def paint(self, painter, option, widget):
-        painter.setPen(QColor(0, 255, 255, 255))
-        # number inside the dot
-        painter.drawText(self.rect(), 0, str(self.num))
+        text = str(self.num)
+        # text to center of the dot
+        shape_rect = self.rect()
+        painter.setFont(QFont("Arial", 10))
+        text_rect = painter.fontMetrics().boundingRect(text)
+        # make center of text and center of shape the same (sometimes need 1 pixel left - why?)
+        text_rect.moveCenter(shape_rect.center().toPoint() - QPoint(1, 0))
         super().paint(painter, option, widget)
+        painter.setPen(QColor(Qt.yellow))
+        painter.setPen(QColor(Qt.yellow))
+        painter.drawRect(text_rect)
+        painter.drawText(text_rect, 0, text)
 
     def __repr__(self):
         return f"DraggableDot({self.num}, x:{self.pos().x()}, y:{self.pos().y()})"
@@ -172,6 +184,7 @@ class ImageViewer(QGraphicsView):
         settings.beginGroup("MainWindow")
         # file_name = self.image_file_name
         settings.setValue("file_name", self.image_file_name)
+        settings.remove("dots")
         settings.setValue("size", self.size())
         settings.beginWriteArray("dots")
         for i, dot in enumerate(self.dots):
