@@ -1,12 +1,12 @@
 from PySide6.QtWidgets import (QApplication,
                                QFileDialog,
                                QGraphicsView,
-                               QGraphicsScene,
                                QGraphicsPixmapItem,
                                QGraphicsEllipseItem)
 
 from PySide6.QtGui import QPixmap, QColor
 from PySide6.QtCore import QSettings, Qt
+from gui.scene import Scene
 
 org = "StephanW"
 prog = "QGraphicsTest"
@@ -38,7 +38,9 @@ class ImageViewer(QGraphicsView):
     def __init__(self):
         super().__init__()
 
-        self.setScene(QGraphicsScene(self))
+        scene = Scene(self)
+        self.setScene(scene)
+        scene.keyReleased.connect(self.key_released)
 
         settings = QSettings(org, prog)
         settings.beginGroup("MainWindow")
@@ -75,6 +77,18 @@ class ImageViewer(QGraphicsView):
         # self.scene().addItem(self.image_item)
         self.setWindowTitle("QMainWindow WheelEvent")
 
+    def key_released(self, key):
+        if key == Qt.Key_Delete:
+
+            subset_to_remove = [(i, dot) for i, dot in enumerate(self.dots) if dot.isSelected()]
+
+            for i, dot in subset_to_remove:
+                if dot.isSelected():
+                    self.scene().removeItem(dot)
+
+            for index, _ in sorted(subset_to_remove, reverse=True):
+                del self.dots[index]
+
     def mousePressEvent(self, event):
         # right click to add a dot
         if event.button() == Qt.RightButton:
@@ -87,8 +101,8 @@ class ImageViewer(QGraphicsView):
 
     def wheelEvent(self, event):
         angle = event.angleDelta().y()
-        zoomFactor = 1 + (angle/1000)
-        self.scale(zoomFactor, zoomFactor)
+        zoom_factor = 1 + (angle/1000)
+        self.scale(zoom_factor, zoom_factor)
 
     def closeEvent(self, event):
         settings = QSettings(org, prog)
