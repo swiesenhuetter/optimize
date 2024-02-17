@@ -5,21 +5,43 @@ from PySide6.QtWidgets import (QApplication,
                                QGraphicsEllipseItem)
 
 from PySide6.QtGui import QPixmap, QColor
-from PySide6.QtCore import QSettings, Qt
+from PySide6.QtCore import QSettings, Qt, QRectF
 from gui.scene import Scene
+from gui.resize import Resizer
 
 org = "StephanW"
 prog = "QGraphicsTest"
 
 
 class DraggableDot(QGraphicsEllipseItem):
+    resizer = Resizer
+
     def __init__(self, x, y, w, h, num, parent=None):
         super().__init__(x, y, w, h, parent)
         self.num = num
+        self.setAcceptHoverEvents(True)
         self.setFlag(QGraphicsEllipseItem.ItemIsMovable, True)
         self.setFlag(QGraphicsEllipseItem.ItemIsSelectable, True)
         self.setFlag(QGraphicsEllipseItem.ItemIsFocusable, True)
+        self.setFlag(QGraphicsEllipseItem.ItemSendsGeometryChanges, True)
         self.setBrush(QColor(0, 0, 255, 255))
+        self.resizer_regions = {}
+        self.set_resizer_regions()
+
+    def set_resizer_regions(self):
+        bounds = self.boundingRect()
+        sz = Resizer.size()
+
+        self.resizer_regions = {
+            Resizer.handleNW: QRectF(bounds.left(), bounds.top(), sz, sz),
+            Resizer.handleN: QRectF(bounds.center().x() - sz / 2.0, bounds.top(), sz, sz),
+            Resizer.handleNE: QRectF(bounds.right() - sz, bounds.top(), sz, sz),
+            Resizer.handleW: QRectF(bounds.left(), bounds.center().y() - sz / 2.0, sz, sz),
+            Resizer.handleE: QRectF(bounds.right() - sz, bounds.center().y() - sz / 2.0, sz, sz),
+            Resizer.handleSW: QRectF(bounds.left(), bounds.bottom() - sz, sz, sz),
+            Resizer.handleS: QRectF(bounds.center().x() - sz / 2.0, bounds.bottom() - sz, sz, sz),
+            Resizer.handleSE: QRectF(bounds.right() - sz, bounds.bottom() - sz, sz, sz)
+        }
 
     def paint(self, painter, option, widget):
         painter.setPen(QColor(0, 255, 255, 255))
@@ -31,7 +53,40 @@ class DraggableDot(QGraphicsEllipseItem):
         return f"DraggableDot({self.num}, x:{self.pos().x()}, y:{self.pos().y()})"
 
     def mouseMoveEvent(self, event):
+        # if alt is pressed, resize the dot
+        if event.modifiers() == Qt.AltModifier:
+            self.setRect(self.rect().x(), self.rect().y(), event.pos().x(), event.pos().y())
+            print(f"mouseMoveEvent: {self.pos()}")
         super().mouseMoveEvent(event)
+
+    def itemChange(self, change, value):
+        # if change == QGraphicsEllipseItem.ItemPositionHasChanged:
+        #     print(f"ItemPositionHasChanged: {self.pos()}")
+        return super().itemChange(change, value)
+
+    def boundingRect(self):
+        """
+        Returns the bounding rect of the shape (including the resize handles).
+        """
+        o = Resizer.size() + Resizer.offset()
+        return self.rect().adjusted(-o, -o, o, o)
+
+    def get_resizer(self, point):
+        for region, rect in self.resizer_regions.items():
+            if rect.contains(point):
+                return region
+        return None
+
+    def hoverMoveEvent(self, move_event):
+        if self.isSelected():
+            handle = self.get_resizer(move_event.pos())
+            cursor = Qt.ArrowCursor if handle is None else self.resizer.get_cursor(handle)
+            self.setCursor(cursor)
+        super().hoverMoveEvent(move_event)
+
+    def hoverLeaveEvent(self, move_event):
+        self.setCursor(Qt.ArrowCursor)
+        super().hoverLeaveEvent(move_event)
 
 
 class ImageViewer(QGraphicsView):
@@ -93,7 +148,7 @@ class ImageViewer(QGraphicsView):
         # right click to add a dot
         if event.button() == Qt.RightButton:
             pos = event.position()
-            dot = DraggableDot(pos.x() - 10, pos.y() - 10, 20, 20, len(self.dots) + 1)
+            dot = DraggableDot(pos.x() - 10, pos.y() - 10, 40, 40, len(self.dots) + 1)
             self.dots.append(dot)
             self.scene().addItem(dot)
         else:
@@ -122,6 +177,7 @@ class ImageViewer(QGraphicsView):
         settings.endGroup()
         super().closeEvent(event)
         print("closeEvent")
+
 
 if __name__ == "__main__":
     app = QApplication([])
