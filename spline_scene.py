@@ -4,7 +4,7 @@ from PySide6.QtWidgets import (QApplication,
                                QGraphicsPixmapItem,
                                QGraphicsEllipseItem)
 
-from PySide6.QtGui import QPixmap, QColor
+from PySide6.QtGui import QPixmap, QColor, QPainterPath
 from PySide6.QtCore import QSettings, Qt, QRectF
 from gui.scene import Scene
 from gui.resize import Resizer
@@ -87,6 +87,14 @@ class DraggableDot(QGraphicsEllipseItem):
     def hoverLeaveEvent(self, move_event):
         self.setCursor(Qt.ArrowCursor)
         super().hoverLeaveEvent(move_event)
+
+    def shape(self):
+        path = QPainterPath()
+        path.addRect(self.rect())
+        if self.isSelected():
+            for shape in self.resizer_regions.values():
+                path.addEllipse(shape)
+        return path
 
 
 class ImageViewer(QGraphicsView):
