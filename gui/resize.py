@@ -1,3 +1,7 @@
+"""
+https://stackoverflow.com/questions/34429632/resize-a-qgraphicsitem-with-the-mouse
+"""
+
 from enum import Enum
 from PySide6.QtCore import Qt, QRectF
 

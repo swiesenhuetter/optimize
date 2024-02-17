@@ -1,16 +1,11 @@
-from PySide6.QtWidgets import (QApplication,
-                               QFileDialog,
-                               QGraphicsView,
-                               QGraphicsPixmapItem,
-                               QGraphicsEllipseItem)
+from PySide6.QtWidgets import QGraphicsEllipseItem
 
 from PySide6.QtGui import (QColor,
                            QPainterPath,
                            QFont)
 
-from PySide6.QtCore import QSettings, Qt, QRectF, QPoint
+from PySide6.QtCore import Qt, QPoint, QPointF
 from gui.resize import Resizer
-
 
 
 class DraggableDot(QGraphicsEllipseItem):
@@ -27,6 +22,9 @@ class DraggableDot(QGraphicsEllipseItem):
         self.setBrush(QColor(0, 0, 255, 255))
         self.resizer_regions = {}
         self.resizer_regions = Resizer.regions(self.boundingRect())
+        self.resizer_selected = None
+        self.mouse_pos = None
+        self.mouse_press_rect = None
 
     def paint(self, painter, option, widget):
         text = str(self.num)
@@ -80,6 +78,108 @@ class DraggableDot(QGraphicsEllipseItem):
     def hoverLeaveEvent(self, move_event):
         self.setCursor(Qt.ArrowCursor)
         super().hoverLeaveEvent(move_event)
+
+    def mousePressEvent(self, mouse_event):
+        self.resizer_selected = self.get_resizer(mouse_event.pos())
+        if self.resizer_selected:
+            self.mouse_pos = mouse_event.pos()
+            self.mouse_press_rect = self.boundingRect()
+        super().mousePressEvent(mouse_event)
+
+    def mouseMoveEvent(self, mouse_event):
+        if self.resizer_selected is not None:
+            self.interactive_resize(mouse_event.pos())
+        else:
+            super().mouseMoveEvent(mouse_event)
+
+    def mouseReleaseEvent(self, mouse_event):
+        super().mouseReleaseEvent(mouse_event)
+        self.resizer_selected = None
+        self.mouse_pos = None
+        self.mouse_press_rect = None
+        self.update()
+
+    def interactive_resize(self, pos):
+        offset = Resizer.size() + Resizer.offset()
+        bounding_rect = self.boundingRect()
+        rect = self.rect()
+        diff = QPointF(0, 0)
+
+        self.prepareGeometryChange()
+
+        if self.resizer_selected == Resizer.handleN:
+            from_y = self.mouse_press_rect.top()
+            to_y = from_y + pos.y() - self.mouse_pos.y()
+            diff.setY(to_y - from_y)
+            bounding_rect.setTop(to_y)
+            rect.setTop(bounding_rect.top() + offset)
+        elif self.resizer_selected == Resizer.handleS:
+            from_y = self.mouse_press_rect.bottom()
+            to_y = from_y + pos.y() - self.mouse_pos.y()
+            diff.setY(to_y - from_y)
+            bounding_rect.setBottom(to_y)
+            rect.setBottom(bounding_rect.bottom() - offset)
+        elif self.resizer_selected == Resizer.handleW:
+            from_x = self.mouse_press_rect.left()
+            to_x = from_x + pos.x() - self.mouse_pos.x()
+            diff.setX(to_x - from_x)
+            bounding_rect.setLeft(to_x)
+            rect.setLeft(bounding_rect.left() + offset)
+        elif self.resizer_selected == Resizer.handleE:
+            from_x = self.mouse_press_rect.right()
+            to_x = from_x + pos.x() - self.mouse_pos.x()
+            diff.setX(to_x - from_x)
+            bounding_rect.setRight(to_x)
+            rect.setRight(bounding_rect.right() - offset)
+        elif self.resizer_selected == Resizer.handleNW:
+            from_x = self.mouse_press_rect.left()
+            to_x = from_x + pos.x() - self.mouse_pos.x()
+            diff.setX(to_x - from_x)
+            bounding_rect.setLeft(to_x)
+            rect.setLeft(bounding_rect.left() + offset)
+            from_y = self.mouse_press_rect.top()
+            to_y = from_y + pos.y() - self.mouse_pos.y()
+            diff.setY(to_y - from_y)
+            bounding_rect.setTop(to_y)
+            rect.setTop(bounding_rect.top() + offset)
+        elif self.resizer_selected == Resizer.handleNE:
+            from_x = self.mouse_press_rect.right()
+            to_x = from_x + pos.x() - self.mouse_pos.x()
+            diff.setX(to_x - from_x)
+            bounding_rect.setRight(to_x)
+            rect.setRight(bounding_rect.right() - offset)
+            from_y = self.mouse_press_rect.top()
+            to_y = from_y + pos.y() - self.mouse_pos.y()
+            diff.setY(to_y - from_y)
+            bounding_rect.setTop(to_y)
+            rect.setTop(bounding_rect.top() + offset)
+        elif self.resizer_selected == Resizer.handleSW:
+            from_x = self.mouse_press_rect.left()
+            to_x = from_x + pos.x() - self.mouse_pos.x()
+            diff.setX(to_x - from_x)
+            bounding_rect.setLeft(to_x)
+            rect.setLeft(bounding_rect.left() + offset)
+            from_y = self.mouse_press_rect.bottom()
+            to_y = from_y + pos.y() - self.mouse_pos.y()
+            diff.setY(to_y - from_y)
+            bounding_rect.setBottom(to_y)
+            rect.setBottom(bounding_rect.bottom() - offset)
+        elif self.resizer_selected == Resizer.handleSE:
+            from_x = self.mouse_press_rect.right()
+            to_x = from_x + pos.x() - self.mouse_pos.x()
+            diff.setX(to_x - from_x)
+            bounding_rect.setRight(to_x)
+            rect.setRight(bounding_rect.right() - offset)
+            from_y = self.mouse_press_rect.bottom()
+            to_y = from_y + pos.y() - self.mouse_pos.y()
+            diff.setY(to_y - from_y)
+            bounding_rect.setBottom(to_y)
+            rect.setBottom(bounding_rect.bottom() - offset)
+        else:
+            return
+
+        self.setRect(rect)
+        self.resizer_regions = Resizer.regions(self.boundingRect())
 
     def shape(self):
         path = QPainterPath()
