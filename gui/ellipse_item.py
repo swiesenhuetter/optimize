@@ -43,13 +43,6 @@ class EllipseItem(QGraphicsEllipseItem):
     def __repr__(self):
         return f"DraggableDot({self.num}, x:{self.pos().x()}, y:{self.pos().y()})"
 
-    def mouseMoveEvent(self, event):
-        # if alt is pressed, resize the dot
-        if event.modifiers() == Qt.AltModifier:
-            self.setRect(self.rect().x(), self.rect().y(), event.pos().x(), event.pos().y())
-            print(f"mouseMoveEvent: {self.pos()}")
-        super().mouseMoveEvent(event)
-
     def itemChange(self, change, value):
         # if change == QGraphicsEllipseItem.ItemPositionHasChanged:
         #     print(f"ItemPositionHasChanged: {self.pos()}")
