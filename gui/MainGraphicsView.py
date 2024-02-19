@@ -36,7 +36,7 @@ class ImageViewer(QGraphicsView):
             w = settings.value("width")
             h = settings.value("height")
             num = settings.value("num")
-            if None not in (x, y, num):
+            if None not in (x, y, w, h, num):
                 movable_dot = EllipseItem(float(x), float(y), float(w), float(h), num)
                 self.dots.append(movable_dot)
                 self.scene().addItem(movable_dot)
