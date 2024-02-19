@@ -2,7 +2,7 @@ from PySide6.QtWidgets import (QFileDialog,
                                QGraphicsView,
                                QGraphicsPixmapItem)
 
-from PySide6.QtGui import (QPixmap)
+from PySide6.QtGui import (QPixmap, QPainter)
 from PySide6.QtCore import QSettings, Qt
 from gui.scene import Scene
 from gui.ellipse_item import EllipseItem
@@ -14,6 +14,9 @@ prog = "QGraphicsTest"
 class ImageViewer(QGraphicsView):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
+        self.setWindowTitle("QMainWindow Graphics Viewer")
+
+        self.setRenderHint(QPainter.Antialiasing, True)
 
         scene = Scene(self)
         self.setScene(scene)
@@ -45,16 +48,29 @@ class ImageViewer(QGraphicsView):
 
         self.setSceneRect(0, 0, self.width(), self.height())
         self.setTransformationAnchor(self.ViewportAnchor.AnchorUnderMouse)
-        if not self.image_file_name:
-            self.image_file_name = QFileDialog.getOpenFileName(self, 'Open file', 'c:\\', "Image files (*.jpg *.gif *.png)")[0]
 
-        pixmap = QPixmap(self.image_file_name)
+        self.background_item = QGraphicsPixmapItem()
+        self.scene().addItem(self.background_item)
 
-        # background image
-        self.image_item = QGraphicsPixmapItem(pixmap)
-        self.image_item.setZValue(-1)
-        # self.scene().addItem(self.image_item)
-        self.setWindowTitle("QMainWindow WheelEvent")
+        if self.image_file_name:
+            self.load_image(self.image_file_name)
+
+    def select_image(self):
+        file_name, _ = QFileDialog.getOpenFileName(self, "Select Image", "", "Images (*.png *.jpg *.jpeg *.bmp *.gif)")
+        if file_name:
+            self.load_image(file_name)
+
+    def clear_image(self):
+        self.background_item.setPixmap(QPixmap())
+        self.image_file_name = ""
+
+    def load_image(self, file_name):
+        pixmap = QPixmap(file_name)
+        self.background_item.setPixmap(pixmap)
+        self.background_item.setZValue(-1)
+        self.image_file_name = file_name
+        self.setSceneRect(0, 0, pixmap.width(), pixmap.height())
+        self.setSceneRect(0, 0, self.width(), self.height())
 
     def key_released(self, key):
         if key == Qt.Key_Delete:
