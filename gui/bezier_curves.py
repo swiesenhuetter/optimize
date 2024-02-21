@@ -265,7 +265,7 @@ class BezierExample(QtWidgets.QWidget):
 
     def eventFilter(self, obj, event):
         if event.type() == QtCore.QEvent.MouseButtonDblClick:
-            pos = self.bezierView.mapToScene(event.pos())
+            pos = self.bezierView.mapToScene(event.position())
             self.addPoint(pos)
             return True
         return super().eventFilter(obj, event)
